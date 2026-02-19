@@ -1,0 +1,7 @@
+requests==2.31.0
+beautifulsoup4==4.12.3
+sentence-transformers==2.5.1
+faiss-cpu==1.8.0
+numpy==1.26.4
+openai==1.13.3
+python-dotenv==1.0.1
