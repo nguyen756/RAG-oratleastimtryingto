@@ -1,0 +1,24 @@
+{
+  "name": "handlebars",
+  "version": "1.0.0",
+  "description": "This is a standard RAG (Retrieval-Augmented Generation) that extracts texts from Wikipedia, then chunks these texts with a specific length and overlap, then embeds to local vector for retrieval using Gemini LLM API.\r ## Pipeline Architecture\r 1. **Extraction (Scraper):** : Uses `BeautifulSoup` to target `bodyContent` `<div>` of scraped Wikipedia's texts.\r    - Employs custom HTTP headers (Was trying to see if that could bypass fandom Wiki for personal uses, but failed).\r    - Strips noise (tables, references, scripts) before processing.\r 2. **Transformation (Cleaning & Hashing):**\r    - Applies a custom `clean_text()` utility to normalize unicode, fix HTML escaping, and remove non-breaking spaces.\r    - Generates a `SHA-1`  for future deduplication and database updates.\r 3. **Embedding:**\r    - Use `sentence-transformers/all-MiniLM-L6-v2` to embed these chunks into 384-dimensional vectors.\r 4. **Vector Storage & Retrieval:**\r    - Powered by `FAISS` (Facebook AI Similarity Search).\r    - Uses `IndexFlatL2` (Euclidean distance) to search for user queries.\r 5. **Augmented Generation:**\r    - Use Gemini LLM API for the answer.",
+  "homepage": "https://github.com/nguyen756/RAG-oratleastimtryingto#readme",
+  "bugs": {
+    "url": "https://github.com/nguyen756/RAG-oratleastimtryingto/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nguyen756/RAG-oratleastimtryingto.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "handlebars": "^4.7.8"
+  }
+}

@@ -11,7 +11,9 @@ class Embedder:
         texts = [item["text"] for item in json]
         vectors = self.model.encode(texts)
         self.index.add(np.array(vectors).astype('float32'))
+        faiss.write_index(self.index, "vector_database.index")
         self.metadata.extend(json)
+        
         print(f"Added {len(json)} items to the index. Total items: {len(self.metadata)}")
     def search(self,query_text,top_k=1):
         print(f"Searching for: {query_text}")
