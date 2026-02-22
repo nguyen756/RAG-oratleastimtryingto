@@ -3,7 +3,8 @@ from hashlib import sha1
 import requests
 from bs4 import BeautifulSoup
 from utils import Utils
-
+import fitz
+import re
 class Scraper:
     def __init__(self):
         self.headers = {
@@ -24,7 +25,62 @@ class Scraper:
             "Sec-Fetch-User": "?1",
             "DNT": "1",  # Do Not Track
         }
-    def get_page(self,url):
+    def get_pdf_text(self,pdf_path):
+        if not pdf_path:
+            return []
+        try:
+            document = fitz.open(pdf_path)
+        except Exception as e:
+            print(f"Error opening PDF: {e}")
+            return []
+        text =  ""
+        
+        
+        for page in document:
+            text += page.get_text()
+            
+        document.close()
+        cleaned_text = Utils.clean_text(text)
+        chunk_texts = Utils.chunk_text(cleaned_text)
+        chunks=[]
+        if chunk_texts:
+                for chunk in chunk_texts:
+                    chunks.append({
+                        "id": Utils.sha1(chunk),
+                        "text": chunk,
+                        "source": pdf_path
+                })
+        return chunks
+    def get_pdf_text_plib(self,pdf_path):
+        if not pdf_path:
+            return []
+        try:
+            document = fitz.open(pdf_path)
+        except Exception as e:
+            print(f"Error opening PDF: {e}")
+            return []
+        text =  ""
+        
+        
+        for page in document:
+            text += page.get_text()
+            
+        document.close()
+        cleaned_text = Utils.clean_text(text)
+        pattern = r"\|\s*#[^\s]+"
+        raw_chunks = re.split(pattern, cleaned_text)
+        text_chunks = [chunk.strip() for chunk in raw_chunks if chunk.strip()]
+        chunks = []
+        if text_chunks:
+            for chunk in text_chunks:
+                chunks.append({
+                    "id": Utils.sha1(chunk),
+                    "text": chunk,
+                    "source": pdf_path 
+                })
+                
+        return chunks
+    def get_page_wiki(self,url):
         try:
             res=requests.get(url,headers=self.headers,timeout=10)
             if res.status_code!=200:
@@ -53,6 +109,6 @@ class Scraper:
         return chunks
 if __name__=="__main__":
     scrapper = Scraper()
-    data = scrapper.get_page("https://en.wikipedia.org/wiki/Visual_snow_syndrome")
+    data = scrapper.get_page_wiki("https://en.wikipedia.org/wiki/Visual_snow_syndrome")
     for item in data:
         print(item)

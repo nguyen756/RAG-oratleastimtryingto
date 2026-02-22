@@ -66,7 +66,12 @@ client = OpenAI(
     )
 scrapper = Scraper()
 engine = Embedder(model_name="all-MiniLM-L6-v2")
-data = scrapper.get_page("https://en.wikipedia.org/wiki/Visual_snow_syndrome")
+engine.load()
+
+if len(engine.metadata) == 0:
+    data = scrapper.get_pdf_text_plib("data/Hard Hit-2.pdf")
+    # data = scrapper.get_pdf_text("data/Hard Hit-2.pdf")
+    # data = scrapper.get_page_wiki("https://en.wikipedia.org/wiki/Visual_snow_syndrome")
 engine.embed(data)
 
 def llm_answer(prompt):
@@ -85,10 +90,17 @@ def ask(request:QueryRequest):
     if not retrieved:
         return 
     best_match = retrieved[0]
-    final_prompt = f"""You are a precise, technical AI assistant.
-Answer the user's question using ONLY the provided context below. 
-If the context does not contain the answer, reply exactly with: "I do not have enough information to answer this."
+#    final_prompt = f"""You are a precise, technical AI assistant.
+# Answer the user's question using ONLY the provided context below. 
+# If the context does not contain the answer, reply exactly with: "I do not have enough information to answer this."
 
+# CONTEXT:
+# {best_match['text']}
+
+# USER QUESTION: 
+# {request.question}
+# """
+    final_prompt = f"""You are a precise, all knowing MMORPG player. Answer with the context of CONTEXT: precisely. But you don't overanalyze, straightforward
 CONTEXT:
 {best_match['text']}
 

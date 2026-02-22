@@ -5,12 +5,15 @@ router.get('/' , async (req, res) => {
 });
 router.post('/', async (req, res) => {
     const userPrompt = req.body.prompt; 
+    const weaponSelection = req.body.weaponType;
 
     try {
-        const pythonResponse = await fetch('http://localhost:8080/query', {
+        const pythonResponse = await fetch('http://host.docker.internal:8080/query', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ question: userPrompt }) 
+            body: JSON.stringify({ question: userPrompt,
+                weapon: weaponSelection
+             }) 
         });
         const data = await pythonResponse.json();
         res.render('index', { 
