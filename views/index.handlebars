@@ -1,12 +1,19 @@
 <form action="/" method="post">
-    <p>chatbox</p>
-    <input name="prompt" placeholder="Enter your prompt" style="margin-bottom: 10px;">
+    <p>RAG type shit</p>
+    
+    <select name="weaponType" style="margin-bottom: 10px; display: block;">
+        <option value="General">General</option>
+        <option value="Two-Handed Sword">2hs</option>
+        <option value="One-Handed Sword">1h</option>
+        <option value="Mage / Staff">mage</option>
+    </select>
+
+    <input name="prompt" style="margin-bottom: 10px; width: 100%;">
     <button style="font-weight:bold" type="submit">Confirm</button>
 </form>
 
 {{#if answer}}
 <div style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;">
-    <p><strong>repsond</strong></p>
     <p>{{answer}}</p>
 </div>
 {{/if}}
