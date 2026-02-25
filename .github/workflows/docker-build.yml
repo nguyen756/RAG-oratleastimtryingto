@@ -22,4 +22,4 @@ jobs:
       - name: Test 
         run: |
           echo "Building microservices to test for errors..."
-          docker-compose build
+          docker compose build
