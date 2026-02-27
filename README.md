@@ -57,3 +57,9 @@ To spin up the entire microservice environment locally:
    ```bash
    docker-compose up --build
 4. Access the UI at http://localhost:3000.
+## Cloud Architecture & CI/CD Pipeline
+The backend ML microservice is fully automated and deployed to AWS using a custom CI/CD pipeline built with GitHub Actions.
+
+* **Continuous Integration:** Automated multi-stage Docker builds on every push to the `main` branch to ensure environment stability.
+* **Container Registry (AWS ECR):** GitHub Actions securely authenticates via IAM Least Privilege policies to push compiled images to a private Elastic Container Registry.
+* **Production Deployment (AWS EC2):** A dedicated Ubuntu EC2 instance pulls the latest image from the ECR vault and restarts the FastAPI container. The server is secured via strict Security Group inbound rules and `.env` secrets are injected dynamically through the CI/CD pipeline tunnel.
