@@ -1,35 +1,59 @@
-# RAG (From wiki for now, since I don't have any specific source of data I wanna use):
+# Custom Naive RAG Engine (Microservice Architecture)
+
+
+
 ## Overview
-This is a standard RAG (Retrieval-Augmented Generation) that extracts texts from Wikipedia, then chunks these texts with a specific length and overlap, then embeds to local vector for retrieval using Gemini LLM API.
+A full-stack, containerized Retrieval-Augmented Generation (RAG) system initially built to parse Wikipedia, customized a bit to extract, embed, and query skill data from Toram Online. 
+
+
+Instead of using the character-limit chunking method, this uses chunking for a specific regex pattern in the skill data(`get_text_pdf_plib`), but can also be turned off by using a regular `get_text_pdf`. The infrastructure is decoupled into a Node.js frontend and a Python FastAPI backend, orchestrated entirely via Docker Compose for complete environment parity.
+
+*Note: The original Wikipedia BeautifulSoup scraper and standard PDF OCR pipelines are not deprecated. They are preserved in the codebase as modular, uncommentable data-ingestion pipelines for future domain expansion.*
+
 ## Pipeline Architecture
-1. **Extraction (Scraper):** : Uses `BeautifulSoup` to target `bodyContent` `<div>` of scraped Wikipedia's texts.
-   - Employs custom HTTP headers (Was trying to see if that could bypass fandom Wiki for personal uses, but failed).
-   - Strips noise (tables, references, scripts) before processing.
-2. **Transformation (Cleaning & Hashing):**
-   - Applies a custom `clean_text()` utility to normalize unicode, fix HTML escaping, and remove non-breaking spaces.
-   - Generates a `SHA-1`  for future deduplication and database updates.
-3. **Embedding:**
-   - Use `sentence-transformers/all-MiniLM-L6-v2` to embed these chunks into 384-dimensional vectors.
-4. **Vector Storage & Retrieval:**
-   - Powered by `FAISS` (Facebook AI Similarity Search).
-   - Uses `IndexFlatL2` (Euclidean distance) to search for user queries.
-5. **Augmented Generation:**
-   - Use Gemini LLM API for the answer.
+
+1. **Extraction & Semantic Chunking (Data Engineering):**
+   - **Primary (PDFs):** Uses `PyMuPDF` to read local PDF texts. Bypasses standard newline-stripping issues by implementing custom Regex (`r"\|\s*#[^\s]+"`) to cleanly slice text precisely at skill tree boundaries (`#blade-skills🗡` and such).
+   - **Toggleable (Wikipedia):** Uses `BeautifulSoup4` to target `bodyContent` `<div>` tags, stripping noise (tables, scripts) and applying custom `clean_text()` utilities to normalize unicode and fix HTML escaping.
+   - Generates `SHA-1` hashes for data chunks to ensure future deduplication.
+
+2. **Vector Persistence & Embedding:**
+   - Powered by `sentence-transformers/all-MiniLM-L6-v2`.
+   - Uses `FAISS` with `IndexFlatL2` Euclidean distance retrieval.
+   - Implements hard-drive persistence: saves both the mathematical vectors (`.index`) and the text payloads (`metadata.json`) to prevent data amnesia across server reboots.
+
+3. **Backend Microservice (Python):**
+   - `FastAPI` serving the ML engine on port `8080`.
+   - Pre-loads the FAISS index into RAM at startup to eliminate search latency.
+   - Injects the retrieved context into the Gemini API System Prompt.
+
+4. **Frontend UI (Node.js):**
+   - An `Express.js` web server rendering a `Handlebars` UI on port `3000`.
+   - Communicates securely with the Python backend via Docker's internal `host.docker.internal` / DNS routing.
+
+5. **Orchestration & Security (DevOps):**
+   - Managed via `docker-compose.yml`.
+   - Utilizes Multi-Stage Docker builds and Alpine Linux base images to minimize attack surfaces and image bloat.
+   - Enforces the Principle of Least Privilege by executing containers as the restricted `node` user rather than `root`.
+   - Strictly manages secrets (API keys) via `.env` injection at runtime, protected by `.dockerignore`.
+
+## Current Limitations & Engineering Realities
+- **Context Confusion:** Currently restricted to `top_k=1`. Injecting multiple skill blocks (`top_k=5`) caused the LLM to hallucinate or cross-contaminate math between different skills. 
+- **The Rulebook Bottleneck:** Attempting to hardcode game mechanics into the LLM System Prompt proved highly inefficient and token-expensive.
+- **Future Solution:** The next architectural step is replacing the simple Regex extraction with **Metadata Filtering** (tagging FAISS vectors by weapon type) to isolate searches and eliminate cross-contamination without bloating the prompt.
 
 ## Tech Stack
-* **Python 3.12+**
-* **Ingestion:** `requests`, `beautifulsoup4`, `lxml`
-* **Vector Database:** `faiss-cpu`
-* **Embeddings:** `sentence-transformers`
-* **LLM Integration:** `openai` (SDK adapted for Gemini API)
+* **DevOps / Infra:** `Docker`, `Docker Compose`
+* **Backend:** `Python 3.12+`, `FastAPI`, `Uvicorn`
+* **Frontend:** `Node.js v24.12`, `Express`, `Handlebars`
+* **Data / ML:** `PyMuPDF`, `FAISS-cpu`, `SentenceTransformers`, `Gemini API`, `BeautifulSoup4`
 
-## Current Status
-- [x] Basic HTML Scraper
-- [x] Text Normalization & Hashing
-- [x] Local Vector Embedding
-- [x] FAISS Indexing & Search
-- [x] LLM API Integration
-- [x] Implement Sliding Window Chunking
-- [ ] Migrate to Scanned PDF OCR Pipeline (Future)
-     
+## Quick Start
+To spin up the entire microservice environment locally:
 
+1. Clone the repository.
+2. Create a `.env` file in the root directory and add your API key: `GEMINI_API_KEY=your_key_here`
+3. Build and launch the cluster:
+   ```bash
+   docker-compose up --build
+4. Access the UI at http://localhost:3000.
