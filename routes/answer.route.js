@@ -8,7 +8,8 @@ router.post('/', async (req, res) => {
     const weaponSelection = req.body.weaponType;
 
     try {
-        const pythonResponse = await fetch('http://host.docker.internal:8080/query', {
+        API_URL = process.env.API_URL || 'http://host.docker.internal:8080/';
+        const pythonResponse = await fetch(API_URL + 'query', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ question: userPrompt,
