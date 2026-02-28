@@ -4,7 +4,7 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 import faiss
 import uvicorn
 from pydantic import BaseModel
@@ -84,6 +84,7 @@ def llm_answer(prompt):
 @app.get("/")
 def check():
     return {"status":{"true"}}
+
 @app.post("/query")
 def ask(request:QueryRequest):
     retrieved = engine.search(request.question,top_k=1)
@@ -112,6 +113,9 @@ USER QUESTION:
         "question":request.question,
         "answer":answer
     }
+@app.get("/health")
+def health_check():
+    return Response(status_code=200, content="OK")
 if __name__=="__main__":
     uvicorn.run(app, host="0.0.0.0", port=8080)
     # prompt = run()

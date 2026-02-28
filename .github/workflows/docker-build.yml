@@ -85,6 +85,11 @@ jobs:
                 environment:
                   - GEMINI_API_KEY=$GEMINI_API_KEY
                 restart: always
+                healthy:
+                  test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+                  interval: 30s
+                  timeout: 10s
+                  retries: 3
             EOF
             export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY
             export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_KEY
