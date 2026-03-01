@@ -85,7 +85,7 @@ jobs:
                 environment:
                   - GEMINI_API_KEY=$GEMINI_API_KEY
                 restart: always
-                healthy:
+                healthcheck:
                   test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
                   interval: 30s
                   timeout: 10s
