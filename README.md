@@ -1,65 +1,43 @@
-# Custom Naive RAG Engine (Microservice Architecture)
-
+# Cloud-Native RAG Microservice & Semantic Cache 
 
 
 ## Overview
-A full-stack, containerized Retrieval-Augmented Generation (RAG) system initially built to parse Wikipedia, customized a bit to extract, embed, and query skill data from Toram Online. 
+A full-stack, containerized Retrieval-Augmented Generation (RAG) system deployed on AWS. This architecture is designed to ingest, embed, and query highly specific domain data (currently configured for gaming mechanics) while prioritizing low-latency responses, cost optimization, and high availability.
 
+The infrastructure is fully decoupled into a Node.js frontend and a Python/FastAPI backend, orchestrated via Docker Compose and deployed through a zero-touch GitHub Actions CI/CD pipeline.
 
-Instead of using the character-limit chunking method, this uses chunking for a specific regex pattern in the skill data(`get_text_pdf_plib`), but can also be turned off by using a regular `get_text_pdf`. The infrastructure is decoupled into a Node.js frontend and a Python FastAPI backend, orchestrated entirely via Docker Compose for complete environment parity.
+## Core Architecture & Features
 
+### 1. Dual-FAISS Semantic Caching 
+To prevent redundant LLM API calls and drastically reduce user latency, this system implements an in-memory semantic caching layer.
+* **Vector-Based Interception:** Uses a secondary, in-memory FAISS index (`IndexFlatL2`) to calculate the cosine similarity/distance of incoming user queries against previously asked questions.
+* **Millisecond Resolution:** Cache hits bypass the Gemini API entirely, returning verified answers.
+* **Automated Memory Management:** Implements an automated cache-flush protocol (1,000 query limit) to prevent out-of-memory (OOM) server crashes.
+
+### 2. DevOps & Self-Healing Infrastructure
+* **Automated CI/CD Pipeline:** GitHub Actions automatically builds and pushes multi-stage Docker images to AWS ECR on every main branch commit.
+* **AWS EC2 Deployment:** The production server dynamically pulls the latest images and injects `.env` secrets via IAM Least Privilege policies.
+* **Self-Healing Containers:** Configured with active Docker `healthcheck` probing the FastAPI `/health` endpoint. The orchestrator automatically tears down and reboots zombie containers if the application freezes, ensuring 24/7 uptime without manual intervention.
+
+### 3. Custom Data Engineering & Ingestion
+* **Precision Chunking:** Bypasses standard, error-prone character-limit chunking. Implements custom Regex targeting (`r"\|\s*#[^\s]+"`) via `PyMuPDF` to slice PDFs purely by semantic boundaries (`#blade-skills🗡` and such).
+* **Modular Web Scraping:** Includes preserved `BeautifulSoup4` pipelines to clean, normalize, and ingest raw HTML `bodyContent` for future domain expansion.
+* **Vector Persistence:** Embeddings generated via `all-MiniLM-L6-v2` are saved directly to the disk alongside a `metadata.json` payload, preventing data amnesia across server reboots.
 *Note: The original Wikipedia BeautifulSoup scraper and standard PDF OCR pipelines are not deprecated. They are preserved in the codebase as modular, uncommentable data-ingestion pipelines for future domain expansion.*
-
-## Pipeline Architecture
-
-1. **Extraction & Semantic Chunking (Data Engineering):**
-   - **Primary (PDFs):** Uses `PyMuPDF` to read local PDF texts. Bypasses standard newline-stripping issues by implementing custom Regex (`r"\|\s*#[^\s]+"`) to cleanly slice text precisely at skill tree boundaries (`#blade-skills🗡` and such).
-   - **Toggleable (Wikipedia):** Uses `BeautifulSoup4` to target `bodyContent` `<div>` tags, stripping noise (tables, scripts) and applying custom `clean_text()` utilities to normalize unicode and fix HTML escaping.
-   - Generates `SHA-1` hashes for data chunks to ensure future deduplication.
-
-2. **Vector Persistence & Embedding:**
-   - Powered by `sentence-transformers/all-MiniLM-L6-v2`.
-   - Uses `FAISS` with `IndexFlatL2` Euclidean distance retrieval.
-   - Implements hard-drive persistence: saves both the mathematical vectors (`.index`) and the text payloads (`metadata.json`) to prevent data amnesia across server reboots.
-
-3. **Backend Microservice (Python):**
-   - `FastAPI` serving the ML engine on port `8080`.
-   - Pre-loads the FAISS index into RAM at startup to eliminate search latency.
-   - Injects the retrieved context into the Gemini API System Prompt.
-
-4. **Frontend UI (Node.js):**
-   - An `Express.js` web server rendering a `Handlebars` UI on port `3000`.
-   - Communicates securely with the Python backend via Docker's internal `host.docker.internal` / DNS routing.
-
-5. **Orchestration & Security (DevOps):**
-   - Managed via `docker-compose.yml`.
-   - Utilizes Multi-Stage Docker builds and Alpine Linux base images to minimize attack surfaces and image bloat.
-   - Enforces the Principle of Least Privilege by executing containers as the restricted `node` user rather than `root`.
-   - Strictly manages secrets (API keys) via `.env` injection at runtime, protected by `.dockerignore`.
-
-## Current Limitations & Engineering Realities
-- **Context Confusion:** Currently restricted to `top_k=1`. Injecting multiple skill blocks (`top_k=5`) caused the LLM to hallucinate or cross-contaminate math between different skills. 
-- **The Rulebook Bottleneck:** Attempting to hardcode game mechanics into the LLM System Prompt proved highly inefficient and token-expensive.
-- **Future Solution:** The next architectural step is replacing the simple Regex extraction with **Metadata Filtering** (tagging FAISS vectors by weapon type) to isolate searches and eliminate cross-contamination without bloating the prompt.
-
 ## Tech Stack
-* **DevOps / Infra:** `Docker`, `Docker Compose`
-* **Backend:** `Python 3.12+`, `FastAPI`, `Uvicorn`
-* **Frontend:** `Node.js v24.12`, `Express`, `Handlebars`
-* **Data / ML:** `PyMuPDF`, `FAISS-cpu`, `SentenceTransformers`, `Gemini API`, `BeautifulSoup4`
+* **DevOps / Cloud:** AWS (EC2, ECR, IAM), Docker, Docker Compose, GitHub Actions
+* **Backend:** Python 3.12+, FastAPI, Uvicorn
+* **Frontend:** Node.js v24, Express, Handlebars (Deployed via Render)
+* **ML / Data:** FAISS (CPU), SentenceTransformers, Gemini API, PyMuPDF, BeautifulSoup4
 
-## Quick Start
-To spin up the entire microservice environment locally:
+## Architectural Roadmap (Next Steps)
+* **Metadata Pre-Filtering:** Upgrading the current ingestion pipeline to inject structured JSON tags into the FAISS vectors. This will allow an LLM-driven "bouncer" to pre-filter database chunks by hard attributes (e.g., weapon type, level requirement) before the semantic search begins, eliminating cross-contamination in high-`top_k` searches.
+
+## Quick Start (Local Development)
 
 1. Clone the repository.
-2. Create a `.env` file in the root directory and add your API key: `GEMINI_API_KEY=your_key_here`
-3. Build and launch the cluster:
+2. Create a `.env` file in the root directory: `GEMINI_API_KEY=`
+3. Spin up the decoupled environment:
    ```bash
    docker-compose up --build
-4. Access the UI at http://localhost:3000.
-## Cloud Architecture & CI/CD Pipeline
-The backend ML microservice is fully automated and deployed to AWS using a custom CI/CD pipeline built with GitHub Actions.
-
-* **Continuous Integration:** Automated multi-stage Docker builds on every push to the `main` branch to ensure environment stability.
-* **Container Registry (AWS ECR):** GitHub Actions securely authenticates via IAM Least Privilege policies to push compiled images to a private Elastic Container Registry.
-* **Production Deployment (AWS EC2):** A dedicated Ubuntu EC2 instance pulls the latest image from the ECR vault and restarts the FastAPI container. The server is secured via strict Security Group inbound rules and `.env` secrets are injected dynamically through the CI/CD pipeline tunnel.
+4. Access the frontend UI at http://localhost:3000. And the backend at http://localhost:8080/
