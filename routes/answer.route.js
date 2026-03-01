@@ -8,7 +8,8 @@ router.post('/', async (req, res) => {
     const weaponSelection = req.body.weaponType;
 
     try {
-        const awsip = process.env.API_URL || 'http://host.docker.internal:8080/';
+        const awsip = process.env.API_URL;
+        //const awsip = 'http://host.docker.internal:8080/'
         const pythonResponse = await fetch(`${awsip}query`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

@@ -3,11 +3,13 @@ from vector_engine import Embedder
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+import numpy as np
 
 from fastapi import FastAPI, Response
 import faiss
 import uvicorn
 from pydantic import BaseModel
+from sentence_transformers import SentenceTransformer
 
 app = FastAPI()
 class QueryRequest(BaseModel):
@@ -58,15 +60,23 @@ load_dotenv()
 
 
 
+cache_encode = SentenceTransformer("all-MiniLM-L6-v2")
+cache_index = faiss.IndexFlatL2(cache_encode.get_sentence_embedding_dimension())
+cached_answers = []
+MAX_CACHE_SIZE = 1000
+DISTANCE_THRESHOLD = 0.3
+
+scrapper = Scraper()
+engine = Embedder(model_name="all-MiniLM-L6-v2")
+engine.load()
+
 
 client = OpenAI(
         # This is the default and can be omitted
         api_key=os.getenv("GEMINI_API_KEY"),
         base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
     )
-scrapper = Scraper()
-engine = Embedder(model_name="all-MiniLM-L6-v2")
-engine.load()
+
 
 if len(engine.metadata) == 0:
     data = scrapper.get_pdf_text_plib("data/Hard Hit-2.pdf")
@@ -87,6 +97,15 @@ def check():
 
 @app.post("/query")
 def ask(request:QueryRequest):
+    query_vector = cache_encode.encode([request.question])[0]
+    if cache_index.ntotal > 0:
+        distances, indices = cache_index.search(np.array([query_vector]), 1)
+        if distances[0][0] < DISTANCE_THRESHOLD:
+            return {
+                "question": request.question,
+                "answer": cached_answers[indices[0][0]],
+                "source": "cache"
+            }
     retrieved = engine.search(request.question,top_k=1)
     if not retrieved:
         return 
@@ -108,10 +127,18 @@ CONTEXT:
 USER QUESTION: 
 {request.question}
 """
+    
     answer = llm_answer(final_prompt)
+    if cache_index.ntotal >= MAX_CACHE_SIZE:
+        cache_index.reset()
+        cached_answers.clear()
+
+    cache_index.add(np.array([query_vector]))
+    cached_answers.append(answer)
     return {
         "question":request.question,
-        "answer":answer
+        "answer":answer,
+        "source": "new"
     }
 @app.get("/health")
 def health_check():
