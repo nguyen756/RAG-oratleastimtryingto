@@ -41,3 +41,7 @@ To prevent redundant LLM API calls and drastically reduce user latency, this sys
    ```bash
    docker-compose up --build
 4. Access the frontend UI at http://localhost:3000. And the backend at http://localhost:8080/
+
+
+## Extra note:
+1. Once the faiss database built up and users need to change information, run ./clean.sh locally
