@@ -5,6 +5,10 @@ from bs4 import BeautifulSoup
 from utils import Utils
 import fitz
 import re
+from sync import Sync
+
+
+
 class Scraper:
     def __init__(self):
         self.headers = {
@@ -25,6 +29,8 @@ class Scraper:
             "Sec-Fetch-User": "?1",
             "DNT": "1",  # Do Not Track
         }
+
+    ledger = Sync()
     def get_pdf_text(self,pdf_path):
         if not pdf_path:
             return []
@@ -42,11 +48,16 @@ class Scraper:
         document.close()
         cleaned_text = Utils.clean_text(text)
         chunk_texts = Utils.chunk_text(cleaned_text)
+        
+        
         chunks=[]
         if chunk_texts:
                 for chunk in chunk_texts:
+                    chunk_id = Utils.sha256(chunk)
+                    if self.ledger.is_duplicate(chunk_id):
+                        continue
                     chunks.append({
-                        "id": Utils.sha1(chunk),
+                        "id": chunk_id,
                         "text": chunk,
                         "source": pdf_path
                 })
@@ -73,8 +84,11 @@ class Scraper:
         chunks = []
         if text_chunks:
             for chunk in text_chunks:
+                chunk_id = Utils.sha256(chunk)
+                if self.ledger.is_duplicate(chunk_id):
+                    continue
                 chunks.append({
-                    "id": Utils.sha1(chunk),
+                    "id": chunk_id,
                     "text": chunk,
                     "source": pdf_path 
                 })
@@ -101,8 +115,11 @@ class Scraper:
             text = Utils.chunk_text(text)
             if text:
                 for chunk in text:
+                    chunk_id = Utils.sha256(chunk)
+                    if self.ledger.is_duplicate(chunk_id):
+                        continue
                     chunks.append({
-                        "id": Utils.sha1(chunk),
+                        "id": chunk_id,
                         "text": chunk,
                         "source": url
                 })

@@ -3,9 +3,9 @@ import html
 import re
 class Utils:
     @staticmethod
-    def sha1(text, length=12):
+    def sha256(text, length=12):
         text=str(text)
-        h= hashlib.sha1(text.encode("utf-8")).hexdigest()
+        h= hashlib.sha256(text.encode("utf-8")).hexdigest()
         return h[:length]
     @staticmethod
     def clean_text(text):

@@ -8,6 +8,8 @@ services:
     container_name: rag_engine
     ports:
       - "8080:8080"
+    volumes:
+      - ./data_storage:/app/data_storage
     env_file:
       - .env
   frontend:
