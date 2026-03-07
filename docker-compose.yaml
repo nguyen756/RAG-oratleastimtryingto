@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: rag_engine
     volumes:
-      - ./data_storage:/app/data_storage
+      - ./data:/data
     env_file:
       - .env
   frontend:

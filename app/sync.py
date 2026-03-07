@@ -1,8 +1,9 @@
 import json
 import os
 class Sync:
-    def __init__(self, ledger_path="data_storage/hash_ledger.json"):
+    def __init__(self, ledger_path="/data/hash_ledger.json"):
         self.ledger_path = ledger_path
+        os.makedirs(os.path.dirname(self.ledger_path), exist_ok=True)
         if os.path.exists(self.ledger_path):
             with open(self.ledger_path, "r") as f:
                 self.seen_ids = set(json.load(f))
