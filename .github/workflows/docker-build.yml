@@ -67,6 +67,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          command-timeout: 30m
           envs: AWS_ACCESS_KEY,AWS_SECRET_KEY,AWS_REGION,ECR_REGISTRY,IMAGE_TAG,GEMINI_API_KEY
           script: |
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -117,5 +118,7 @@ jobs:
             export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_KEY
             export AWS_DEFAULT_REGION=$AWS_REGION
             /usr/local/bin/aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+            docker system prune -af --volumes
             docker compose pull
             docker compose up -d
