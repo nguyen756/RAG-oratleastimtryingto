@@ -82,7 +82,8 @@ client = OpenAI(
 data = scrapper.get_pdf_text_plib("data/Hard Hit-3.pdf")
     # data = scrapper.get_pdf_text("data/Hard Hit-2.pdf")
     # data = scrapper.get_page_wiki("https://en.wikipedia.org/wiki/Visual_snow_syndrome")
-engine.embed(data)
+if len(data) > 0:
+    engine.embed(data)
 
 def llm_answer(prompt):
     response = client.chat.completions.create(

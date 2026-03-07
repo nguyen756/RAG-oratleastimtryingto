@@ -9,7 +9,8 @@ router.post('/', async (req, res) => {
 
     try {
         const awsip = process.env.API_URL;
-        //const awsip = 'http://host.docker.internal:8080/'
+        //const awsip = 'http://backend:8080/'
+        //console.log(`${awsip}query`);
         const pythonResponse = await fetch(`${awsip}query`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
