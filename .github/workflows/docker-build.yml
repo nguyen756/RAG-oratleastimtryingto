@@ -67,7 +67,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          command-timeout: 30m
+          command_timeout: 30m
           envs: AWS_ACCESS_KEY,AWS_SECRET_KEY,AWS_REGION,ECR_REGISTRY,IMAGE_TAG,GEMINI_API_KEY
           script: |
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
