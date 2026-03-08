@@ -2,3 +2,8 @@
 node_modules/
 hash_ledger.json
 data_storage/
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
