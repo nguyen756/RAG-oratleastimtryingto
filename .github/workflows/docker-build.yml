@@ -119,6 +119,7 @@ jobs:
             export AWS_DEFAULT_REGION=$AWS_REGION
             /usr/local/bin/aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
-            docker system prune -af --volumes
+            
             docker compose pull
             docker compose up -d
+            docker system prune -af --volumes

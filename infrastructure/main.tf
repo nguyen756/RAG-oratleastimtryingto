@@ -30,6 +30,7 @@ resource "aws_security_group" "rag_bouncer" {
 resource "aws_instance" "rag_production" {
   ami           = "ami-0ba8d27d35e9915fb"
   instance_type = "t2.micro"
+  key_name = "rag-aws-key"
   vpc_security_group_ids = [aws_security_group.rag_bouncer.id]
 
   tags = {
@@ -44,6 +45,7 @@ resource "aws_instance" "rag_production" {
               sudo usermod -aG docker $USER
               systemctl start docker
               systemctl enable docker
-              EOF
 
+
+              EOF
 }
