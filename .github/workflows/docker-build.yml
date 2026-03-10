@@ -75,7 +75,7 @@ jobs:
             unzip -q -o awscliv2.zip
             sudo ./aws/install --update
             mkdir -p nginx
-            mkdir -p nginx certbot/www certbot/conf
+            mkdir -p nginx certbot/www certbot/conf data
             cat << 'EONGINX' > nginx/nginx.conf
             upstream fastapi_backend {
               server backend:8080;
@@ -111,7 +111,7 @@ jobs:
               backend:
                 image: $ECR_REGISTRY/rag-backend:$IMAGE_TAG
                 volumes:
-                  - ./faiss_data:/data
+                  - ./data:/data
                 environment:
                   - GEMINI_API_KEY=$GEMINI_API_KEY
                 restart: always
