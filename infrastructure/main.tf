@@ -19,6 +19,13 @@ resource "aws_security_group" "rag_bouncer" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  # HTTPS
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0,.0.0.0/0"]
+  }
   # outgoing traffic
   egress {
     from_port   = 0
@@ -32,7 +39,10 @@ resource "aws_instance" "rag_production" {
   instance_type = "t2.micro"
   key_name = "rag-aws-key"
   vpc_security_group_ids = [aws_security_group.rag_bouncer.id]
-
+  root_block_device {
+    volume_size = 12
+    volume_type = "gp3"
+  }
   tags = {
     Name = "RAG-Production-Server"
   }
