@@ -103,7 +103,7 @@ jobs:
                   proxy_read_timeout 120s;
               }
             }
-            }
+            
             EONGINX
             cat << EOF > docker-compose.yml
             version: '3.8'
