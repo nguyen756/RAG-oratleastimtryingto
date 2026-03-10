@@ -27,7 +27,7 @@ class Embedder:
         # Save the math (FAISS)
         faiss.write_index(self.index, self.index_path)
         # Save the text (Metadata)
-        with open("data/metadata.json", "w", encoding="utf-8") as f:
+        with open(self.meta_path, "w", encoding="utf-8") as f:
             json.dump(self.metadata, f, ensure_ascii=False, indent=4)
         print("Database and metadata successfully saved to /data folder.")
     def load(self):
