@@ -8,8 +8,9 @@ The infrastructure is fully decoupled into a Node.js frontend and a Python/FastA
 
 ## Core Architecture & Features
 
-### 1. Zero-Trust Security & API Protection
-* **Reverse Proxy:** Implemented an Nginx reverse proxy to shield the FastAPI backend from direct public internet traffic. This acts as a gateway to drop unauthorized requests, preventing malicious bot swarms from scraping the endpoints and draining LLM API quotas.
+### 1. Infrastructure as Code (IaC) & Zero-Trust Security
+* **Terraform Provisioning:** AWS EC2 instances, EBS volumes, and Security Groups are entirely defined and deployed using Terraform HCL, ensuring reproducible and disposable cloud environments.
+* **SSL Termination & Proxy:** Implemented an Nginx reverse proxy with Let's Encrypt certificates to terminate HTTPS traffic. This acts as a gateway to drop unauthorized requests, preventing malicious bot swarms from scraping endpoints and draining LLM API quotas.
 
 ### 2. Dual-FAISS Semantic Caching 
 To prevent redundant LLM API calls and drastically reduce user latency, this system implements an in-memory semantic caching layer.
@@ -25,17 +26,14 @@ To prevent redundant LLM API calls and drastically reduce user latency, this sys
 
 ### 4. Custom Data Engineering & Ingestion
 * **Stateful Volume Mounting:** FAISS indices and synchronization ledgers are hardcoded to absolute paths (`/data`) and mapped to physical AWS EC2 volumes. This ensures the database survives ephemeral Docker container reboots without data amnesia. 
-* **Precision Chunking:** Bypasses standard, error-prone character-limit chunking. Implements custom Regex targeting (`r"\|\s*#[^\s]+"`) via `PyMuPDF` to slice PDFs purely by semantic boundaries (`#blade-skills🗡` and such).
+* **Chunking:** Uses 2 different types of chunking. One is custom Regex targeting (`r"\|\s*#[^\s]+"`) via `PyMuPDF` to slice PDFs purely by semantic boundaries (`#blade-skills🗡` and such). The other one uses regular text-limit chunking.
 * **Modular Web Scraping:** Includes preserved `BeautifulSoup4` pipelines to clean, normalize, and ingest raw HTML `bodyContent` for future domain expansion.
 
 ## Tech Stack
-* **DevOps / Cloud:** AWS (EC2, ECR, IAM), Docker, Docker Compose, GitHub Actions, Nginx
+* **DevOps / Cloud:** AWS (EC2, ECR, IAM), Terraform, Docker, Docker Compose, GitHub Actions, Nginx
 * **Backend:** Python 3.12+, FastAPI, Uvicorn
 * **Frontend:** Node.js v24, Express, Handlebars (Deployed via Render)
 * **ML / Data:** FAISS (CPU), SentenceTransformers, Gemini API, PyMuPDF, BeautifulSoup4
-
-## Architectural Roadmap (Next Steps)
-* **Metadata Pre-Filtering:** Upgrading the current ingestion pipeline to inject structured JSON tags into the FAISS vectors. This will allow an LLM-driven "bouncer" to pre-filter database chunks by hard attributes (e.g., weapon type, level requirement) before the semantic search begins, eliminating cross-contamination in high-`top_k` searches.
 
 ## Quick Start (Local Development)
 
