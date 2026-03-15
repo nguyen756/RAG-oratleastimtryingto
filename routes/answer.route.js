@@ -8,8 +8,8 @@ router.post('/', async (req, res) => {
     const weaponSelection = req.body.weaponType;
 
     try {
-        const awsip = process.env.API_URL;
-        //const awsip = 'http://backend:8080/'
+        //const awsip = process.env.API_URL;
+        const awsip = 'http://backend:8080/'
         //console.log(`${awsip}query`);
         const pythonResponse = await fetch(`${awsip}query`, {
             method: 'POST',
