@@ -9,7 +9,6 @@ class Embedder:
         self.index = faiss.IndexFlatL2(self.model.get_sentence_embedding_dimension())
         self.metadata = []
 
-
         self.db_folder = "/data"
         self.index_path = f"{self.db_folder}/vector_database.index"
         self.meta_path = f"{self.db_folder}/metadata.json"

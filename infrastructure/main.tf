@@ -34,6 +34,7 @@ resource "aws_security_group" "rag_bouncer" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
 resource "aws_instance" "rag_production" {
   ami           = "ami-0ba8d27d35e9915fb"
   instance_type = "t2.micro"
@@ -45,6 +46,10 @@ resource "aws_instance" "rag_production" {
   }
   tags = {
     Name = "RAG-Production-Server"
+  }
+  resource "aws_eip" "web_ip" {
+  instance = aws_instance.rag_production.id
+  domain   = "vpc"
   }
   user_data_replace_on_change = true
   user_data = <<-EOF
