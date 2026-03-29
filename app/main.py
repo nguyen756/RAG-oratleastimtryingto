@@ -9,6 +9,7 @@ import argparse
 import json
 
 from fastapi import FastAPI, Response
+from prometheus_fastapi_instrumentator import Instrumentator
 import faiss
 import uvicorn
 from pydantic import BaseModel
@@ -18,6 +19,7 @@ from agent.agent import check_status, calculate_mscs, general_question
 
 # Initialize FastAPI app
 app = FastAPI()
+Instrumentator().instrument(app).expose(app)
 class QueryRequest(BaseModel):
     question: str
 load_dotenv()

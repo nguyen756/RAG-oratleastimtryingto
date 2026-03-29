@@ -29,12 +29,18 @@ To prevent redundant LLM API calls and drastically reduce user latency, this sys
 * **Chunking:** Uses 2 different types of chunking. One is custom Regex targeting (`r"\|\s*#[^\s]+"`) via `PyMuPDF` to slice PDFs purely by semantic boundaries (`#blade-skills🗡` and such). The other one uses regular text-limit chunking.
 * **Modular Web Scraping:** Includes preserved `BeautifulSoup4` pipelines to clean, normalize, and ingest raw HTML `bodyContent` for future domain expansion.
 
+### 5. Observability & Monitoring
+The system is instrumented monitoring stack to track LLM latency, and API health. (customisable)
+* **Metrics Engine (`prometheus-fastapi-instrumentator`):** FastAPI natively exposes a `/metrics` endpoint, broadcasting application state.
+* **Prometheus (`localhost:9090`):** Scrapes and stores the backend state every 5 seconds.
+* **Grafana (`localhost:3001`):** Visualizes the data via custom dashboards. 
+
 ## Tech Stack
 * **DevOps / Cloud:** AWS (EC2, ECR, IAM), Terraform, Docker, Docker Compose, GitHub Actions, Nginx
 * **Backend:** Python 3.12+, FastAPI, Uvicorn
 * **Frontend:** Node.js v24, Express, Handlebars (Deployed via Render)
 * **ML / Data:** FAISS (CPU), SentenceTransformers, Gemini API, PyMuPDF, BeautifulSoup4
-
+* **Observability** Prometheus
 ## Quick Start (Local Development)
 
 1. Clone the repository.
@@ -46,3 +52,4 @@ To prevent redundant LLM API calls and drastically reduce user latency, this sys
 5. Database Maintenance: If you need to wipe the FAISS database and the hash ledger to ingest fresh documents, run the provided cleanup script before rebuilding:
    ```bash
       .clean/sh
+
