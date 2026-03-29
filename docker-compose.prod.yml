@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  rag_engine:
+    image: ${ECR_REGISTRY}/rag-backend:${IMAGE_TAG}
+    volumes:
+      - ./data:/data
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    depends_on:
+      - rag_engine
+    restart: always
+  
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+  
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    restart: always
+    depends_on:
+      - rag_engine
+  
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "4000:3000"
+    restart: always
+    depends_on:
+      - prometheus
