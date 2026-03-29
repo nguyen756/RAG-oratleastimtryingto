@@ -31,7 +31,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--data_path", type=str, default=default_pdf_path, help="Path to the PDF file to process")
 parser.add_argument("--embedding_model", type=str, default="all-MiniLM-L6-v2", help="Name of the sentence transformer model to use for embeddings")
 parser.add_argument("--port", type=int, default=int(os.getenv("PORT", "8080")), help="Port the FastAPI server should listen on")
-args = parser.parse_args()
+args, unknown = parser.parse_known_args()
 
 data_path = args.data_path
 embedding_model = args.embedding_model
