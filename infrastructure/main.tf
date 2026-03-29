@@ -33,12 +33,26 @@ resource "aws_security_group" "rag_bouncer" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  ingress {
+    description = "grafana"
+    from_port   = 4000
+    to_port     = 4000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    description = "prometheus"
+    from_port   = 9090
+    to_port     = 9090
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_instance" "rag_production" {
-  ami           = "ami-0ba8d27d35e9915fb"
-  instance_type = "t2.micro"
-  key_name = "rag-aws-key"
+  ami                    = "ami-0ba8d27d35e9915fb"
+  instance_type          = "t2.micro"
+  key_name               = "rag-aws-key"
   vpc_security_group_ids = [aws_security_group.rag_bouncer.id]
   root_block_device {
     volume_size = 12
@@ -47,12 +61,9 @@ resource "aws_instance" "rag_production" {
   tags = {
     Name = "RAG-Production-Server"
   }
-  resource "aws_eip" "web_ip" {
-  instance = aws_instance.rag_production.id
-  domain   = "vpc"
-  }
+
   user_data_replace_on_change = true
-  user_data = <<-EOF
+  user_data                   = <<-EOF
               #!/bin/bash
               apt-get update -y
               curl -fsSL https://get.docker.com -o get-docker.sh
@@ -61,4 +72,8 @@ resource "aws_instance" "rag_production" {
               systemctl start docker
               systemctl enable docker
               EOF
+}
+resource "aws_eip" "web_ip" {
+  instance = aws_instance.rag_production.id
+  domain   = "vpc"
 }
