@@ -5,6 +5,12 @@ A full-stack, containerized Retrieval-Augmented Generation (RAG) system deployed
 
 The infrastructure is fully decoupled into a Node.js frontend and a Python/FastAPI backend, orchestrated via Docker Compose and deployed through a zero-touch GitHub Actions CI/CD pipeline.
 
+
+
+*EIP and Instance currently being paused to save my wallet*
+
+
+
 ## Core Architecture & Features
 
 ### 1. Infrastructure as Code (IaC) & Zero-Trust Security
@@ -73,3 +79,4 @@ The live infrastructure is strictly managed via GitHub Actions and Terraform.
 * Secure Backend API: **https://gwasiodmzol.shop**
 
 * Observability Dashboard (Grafana): http://<elastic-ip>:4000 (Requires authentication)
+
