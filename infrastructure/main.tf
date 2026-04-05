@@ -71,9 +71,9 @@ resource "aws_instance" "rag_production" {
               sudo usermod -aG docker ubuntu
               systemctl start docker
               systemctl enable docker
-              EOF
+              EOF 
 }
-resource "aws_eip" "web_ip" {
-  instance = aws_instance.rag_production.id
-  domain   = "vpc"
-}
+# resource "aws_eip" "web_ip" {
+#   instance = aws_instance.rag_production.id
+#   domain   = "vpc"
+# }
